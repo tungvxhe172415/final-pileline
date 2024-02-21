@@ -1,0 +1,51 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      ENV: ${ENV}
+    command: gunicorn -b 0.0.0.0:5012 --preload --log-level=debug server:app
+    ports:
+      - "5012:5012"
+    networks:
+      - RBAC-net
+    volumes:
+      - ./:/app
+
+  db:
+    image: mysql:8.0.34
+    container_name: mysql_RBAC
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: XY58JqcxNLmy8SHN
+    ports:
+      - "3308:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - RBAC-net
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis_RBAC
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass tung1234567890
+    volumes:
+      - cache:/data
+    networks:
+      - RBAC-net
+
+networks:
+  RBAC-net:
+
+volumes:
+  db_data:
+  cache:
